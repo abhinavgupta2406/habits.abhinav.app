@@ -1,0 +1,14 @@
+Outputs:
+  HabitsApiId:
+    Value:
+      Ref: ApiGatewayRestApi
+    Export:
+      Name: HabitsApiId
+
+  HabitsApiIdRootResourceId:
+    Value:
+      Fn::GetAtt:
+        - ApiGatewayRestApi
+        - RootResourceId
+    Export:
+      Name: HabitsApiIdRootResourceId

@@ -1,0 +1,8 @@
+{
+  "name": "infra",
+  "version": "0.1",
+  "devDependencies": {
+    "serverless-api-gateway-throttling": "^2.0.3",
+    "serverless-domain-manager": "^7.1.2"
+  }
+}

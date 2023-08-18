@@ -1,0 +1,45 @@
+service: habits-infra
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: ${opt:region, 'eu-west-2'}
+  environment:
+    NODE_PATH: './:/opt/node_modules'
+  deploymentBucket:
+    name: ${ssm:/habits/s3bucket}
+
+plugins:
+  - serverless-domain-manager
+  - serverless-api-gateway-throttling
+
+custom:
+  customDomain:
+    domainName: ${ssm:/habits/api/route53/domainname}
+    basePath: 'v1'
+    stage: dev
+    createRoute53Record: true
+    apiType: rest
+  apiGatewayThrottling:
+    maxRequestsPerSecond: 5
+    maxConcurrentRequests: 5
+
+package:
+  patterns:
+    - '!node_modules/**'
+
+functions:
+  health:
+    handler: src/Handler.health
+    events:
+      - http:
+          path: /health
+          method: get
+          throttling:
+            maxRequestsPerSecond: 1
+            maxConcurrentRequests: 1
+          cors: true
+
+resources:
+  - ${file(src/resources/api/Gateways.yml)}
