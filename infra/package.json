@@ -4,5 +4,10 @@
   "devDependencies": {
     "serverless-api-gateway-throttling": "^2.0.3",
     "serverless-domain-manager": "^7.1.2"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.1440.0",
+    "cfn-response-promise": "^1.1.0",
+    "lambda-log": "^3.1.0"
   }
 }

@@ -1,0 +1,109 @@
+Resources:
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    DeletionPolicy: Retain
+    Properties:
+      UserPoolName: Habits-UserPool
+      Schema:
+        - Name: name
+          AttributeDataType: String
+          Mutable: true
+          Required: true
+        - Name: email
+          AttributeDataType: String
+          Mutable: true
+          Required: true
+      UsernameAttributes:
+        - email
+      AutoVerifiedAttributes:
+        - email
+
+  UserPoolIdP:
+    Type: AWS::Cognito::UserPoolIdentityProvider
+    DeletionPolicy: Retain
+    Properties:
+      UserPoolId: !Ref UserPool
+      ProviderName: "Google"
+      ProviderDetails:
+        client_id: ${ssm:/habits/cognito/google/clientID}
+        client_secret: ${ssm:/habits/cognito/google/clientSecret}
+        authorize_scopes: "profile email openid"
+      ProviderType: "Google"
+      AttributeMapping:
+        email: "email"
+        name: "name"
+        picture: "picture"
+
+  UserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    DeletionPolicy: Retain
+    Properties:
+      UserPoolId: !Ref UserPool 
+      Domain: ${ssm:/habits/cognito/domain/name}
+      CustomDomainConfig: 
+        CertificateArn: ${ssm:/habits/cognito/domain/certificateArn}
+
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    DependsOn: UserPoolIdP
+    DeletionPolicy: Retain
+    Properties:
+      UserPoolId: !Ref UserPool
+      AllowedOAuthFlows:
+        - implicit
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthScopes:
+        - email
+        - openid
+        - profile
+      CallbackURLs:
+        - ${ssm:/habits/cognito/callback/url}
+      LogoutURLs:
+        - ${ssm:/habits/cognito/logout/url}
+      ClientName: Habits-UserPoolClient
+      ExplicitAuthFlows:
+        - ALLOW_REFRESH_TOKEN_AUTH
+      PreventUserExistenceErrors: ENABLED
+      SupportedIdentityProviders:
+        - Google
+
+  UserPoolCloudfrontDist:
+    Type: Custom::UserPoolCloudFrontDistribution
+    DeletionPolicy: Retain
+    Properties:
+      ServiceToken: !GetAtt UserpoolCloudfrontDistLambdaFunction.Arn
+      UserPoolDomain: !Ref UserPoolDomain
+
+  UserPoolDomainRecordSet:
+    Type: AWS::Route53::RecordSet
+    DependsOn: UserPoolDomain
+    DeletionPolicy: Retain
+    Properties:
+      Name: !Ref UserPoolDomain
+      HostedZoneId: ${ssm:/habits/route53/hostedZoneId}
+      Type: A
+      AliasTarget:
+        HostedZoneId: 'Z2FDTNDATAQYW2'
+        DNSName: !GetAtt UserPoolCloudfrontDist.CloudFrontDistribution
+        EvaluateTargetHealth: false
+
+Outputs:
+  CognitoEndpoint:
+    Value: !Join [ "", [ 
+      "https://", 
+      !Ref UserPoolDomain, 
+      "/login?response_type=token&client_id=", 
+      !Ref UserPoolClient, 
+      "&redirect_uri=", 
+      "${ssm:/habits/cognito/callback/url}" 
+    ] ]
+    Export:
+      Name: HabitsCognitoEndpoint
+
+  UserPoolArn:
+    Value:
+      Fn::GetAtt:
+        - UserPool
+        - Arn
+    Export:
+      Name: HabitsUserPoolArn

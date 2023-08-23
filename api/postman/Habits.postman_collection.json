@@ -1,0 +1,52 @@
+{
+	"info": {
+		"_postman_id": "9f834943-5af6-428e-a1c6-f78826d4498d",
+		"name": "Habits",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Title",
+			"item": [
+				{
+					"name": "Add Title",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"First Habit\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{HABITS_API_ENDPOINT}}/v1/title",
+							"protocol": "https",
+							"host": [
+								"{{HABITS_API_ENDPOINT}}"
+							],
+							"path": [
+								"v1",
+								"title"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

@@ -15,6 +15,9 @@ plugins:
   - serverless-api-gateway-throttling
 
 custom:
+  layer:
+    nodeModulesLayerArn:
+      "Fn::ImportValue": HabitsLambdaLayerArn
   customDomain:
     domainName: ${ssm:/habits/api/route53/domainname}
     basePath: 'v1'
@@ -32,6 +35,7 @@ package:
 functions:
   health:
     handler: src/Handler.health
+    role: healthLambdaRole
     events:
       - http:
           path: /health
@@ -41,5 +45,18 @@ functions:
             maxConcurrentRequests: 1
           cors: true
 
+  userpoolCloudfrontDist:
+    handler: src/Cognito.userpoolCloudfrontDistribution
+    role: userpoolCloudfrontDistLambdaRole
+    layers:
+      - ${self:custom.layer.nodeModulesLayerArn}
+
 resources:
   - ${file(src/resources/api/Gateways.yml)}
+  - ${file(src/resources/database/DynamoDb.yml)}
+  - ${file(src/resources/auth/Cognito.yml)}
+
+  - ${file(src/resources/iam/HealthLambda.yml)}
+  - ${file(src/resources/iam/UserpoolCloudfrontDistLambda.yml)}
+  
+  - ${file(src/resources/iam/CreateTitleLambda.yml)}

@@ -1,0 +1,54 @@
+service: habits-api
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: ${opt:region, 'eu-west-2'}
+  environment:
+    NODE_PATH: './:/opt/node_modules'
+  deploymentBucket:
+    name: ${ssm:/habits/s3bucket}
+  apiGateway:
+    restApiId:
+      "Fn::ImportValue": HabitsApiId
+    restApiRootResourceId:
+      "Fn::ImportValue": HabitsApiIdRootResourceId
+
+custom:
+  dynamodb:
+    tableName:
+      "Fn::ImportValue": HabitsDynamoDbTableName
+  cognito:
+    userPoolArn:
+      "Fn::ImportValue": HabitsUserPoolArn
+  layer:
+    nodeModulesLayerArn:
+      "Fn::ImportValue": HabitsLambdaLayerArn
+  iamRoles:
+    titleCreate:
+      "Fn::ImportValue": HabitsCreateTitleLambdaRoleArn
+
+package:
+  patterns:
+    - '!node_modules/**'
+
+functions:
+  titleCreate:
+    handler: src/Title.create
+    layers:
+      - ${self:custom.layer.nodeModulesLayerArn}
+    environment:
+      TABLE_NAME: ${self:custom.dynamodb.tableName}
+    role: ${self:custom.iamRoles.titleCreate}
+    events:
+      - http:
+          path: /title
+          method: post
+          request:
+            schemas:
+              application/json: ${file(src/schemas/TitleCreate.json)}
+          authorizer:
+            name: authorizer
+            type: COGNITO_USER_POOLS
+            arn: ${self:custom.cognito.userPoolArn}
