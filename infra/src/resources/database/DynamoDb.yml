@@ -1,0 +1,28 @@
+Resources:
+  HabitsDynamoDbTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        -
+          AttributeName: "HashKey"
+          AttributeType: "S"
+        -
+          AttributeName: "RangeKey"
+          AttributeType: "S"
+      KeySchema: 
+        - 
+          AttributeName: "HashKey"
+          KeyType: "HASH"
+        - 
+          AttributeName: "RangeKey"
+          KeyType: "RANGE"
+      TableName: ${self:service}
+
+Outputs:
+  HabitsDynamoDbTableName:
+    Value:
+      Ref: HabitsDynamoDbTable
+    Export:
+      Name: HabitsDynamoDbTableName

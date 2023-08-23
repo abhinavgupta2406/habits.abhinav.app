@@ -1,0 +1,40 @@
+Resources:
+  createTitleLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: habits-create-title
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: habits-create-title
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: arn:aws:logs:*:*:*
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                Resource:
+                  - Fn::GetAtt:
+                    - HabitsDynamoDbTable
+                    - Arn
+
+Outputs:
+  CreateTitleLambdaRoleArn:
+    Value:
+      Fn::GetAtt:
+        - createTitleLambdaRole
+        - Arn
+    Export:
+      Name: HabitsCreateTitleLambdaRoleArn

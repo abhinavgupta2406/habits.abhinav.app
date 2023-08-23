@@ -1,0 +1,26 @@
+service: habits-layers
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: ${opt:region, 'eu-west-2'}
+  deploymentBucket:
+    name: ${ssm:/habits/s3bucket}
+
+layers:
+  nodeModules:
+    path: ./
+    compatibleRuntimes:
+      - nodejs18.x
+    package:
+      patterns:
+        - 'node_modules/**'
+
+resources:
+  Outputs:
+    HabitsLambdaLayerArn:
+      Value:
+        Ref: NodeModulesLambdaLayer
+      Export:
+        Name: HabitsLambdaLayerArn
